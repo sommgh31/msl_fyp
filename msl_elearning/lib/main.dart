@@ -5,7 +5,7 @@ import 'package:camera/camera.dart';
 import 'homepage.dart';
 import 'dictionary.dart';
 import 'quiz-home.dart';
-import 'screens/realtime_camera.dart';
+import 'camera_page.dart';
 
 // To hold camera reference globally
 List<CameraDescription> cameras = [];
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
         '/dictionary': (context) => const DictionaryPage(),
         '/quizHome': (context) => const QuizHomePage(),
-        '/camera': (context) => const RealTimeCamera(),
+        '/camera': (context) => const CameraPage(),
       },
     );
   }
