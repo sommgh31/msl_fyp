@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'quiz-home.dart';
 import 'quizzes.dart';
+import 'services/firebase_service.dart';
 
-class QuizScorePage extends StatelessWidget {
+class QuizScorePage extends StatefulWidget {
   final int score;
   final int totalQuestions;
   final int timeSpent; // in seconds
@@ -18,6 +19,48 @@ class QuizScorePage extends StatelessWidget {
     required this.quizNumber,
   });
 
+  @override
+  State<QuizScorePage> createState() => _QuizScorePageState();
+}
+
+class _QuizScorePageState extends State<QuizScorePage> {
+  final _firebaseService = FirebaseService();
+  bool _isSaving = false;
+  bool _isSaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _saveQuizResult();
+  }
+
+  Future<void> _saveQuizResult() async {
+    setState(() => _isSaving = true);
+
+    final success = await _firebaseService.saveQuizResult(
+      quizType: widget.quizType,
+      score: widget.score,
+      totalQuestions: widget.totalQuestions,
+      timeSpent: widget.timeSpent,
+    );
+
+    setState(() {
+      _isSaving = false;
+      _isSaved = success;
+    });
+
+    if (!success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save quiz result'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+  }
+
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
@@ -28,7 +71,7 @@ class QuizScorePage extends StatelessWidget {
   }
 
   String _getScoreMessage() {
-    final percentage = (score / totalQuestions * 100).round();
+    final percentage = (widget.score / widget.totalQuestions * 100).round();
     if (percentage >= 90) {
       return "Excellent!";
     } else if (percentage >= 70) {
@@ -41,7 +84,7 @@ class QuizScorePage extends StatelessWidget {
   }
 
   Color _getScoreColor() {
-    final percentage = (score / totalQuestions * 100).round();
+    final percentage = (widget.score / widget.totalQuestions * 100).round();
     if (percentage >= 90) {
       return Colors.green;
     } else if (percentage >= 70) {
@@ -54,7 +97,7 @@ class QuizScorePage extends StatelessWidget {
   }
 
   IconData _getScoreIcon() {
-    final percentage = (score / totalQuestions * 100).round();
+    final percentage = (widget.score / widget.totalQuestions * 100).round();
     if (percentage >= 90) {
       return Icons.emoji_events;
     } else if (percentage >= 70) {
@@ -68,7 +111,7 @@ class QuizScorePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percentage = (score / totalQuestions * 100).round();
+    final percentage = (widget.score / widget.totalQuestions * 100).round();
     final scoreColor = _getScoreColor();
     final scoreIcon = _getScoreIcon();
     final scoreMessage = _getScoreMessage();
@@ -89,16 +132,23 @@ class QuizScorePage extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                   ),
                   Text(
-                    "Quiz $quizNumber - $quizType",
+                    "Quiz ${widget.quizNumber} - ${widget.quizType}",
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.menu, size: 24),
-                    onPressed: () {},
-                  ),
+                  // Save indicator
+                  if (_isSaving)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else if (_isSaved)
+                    const Icon(Icons.cloud_done, color: Colors.green)
+                  else
+                    const SizedBox(width: 20),
                 ],
               ),
 
@@ -123,7 +173,7 @@ class QuizScorePage extends StatelessWidget {
 
               // Score Percentage
               Text(
-                "$score / $totalQuestions",
+                "${widget.score} / ${widget.totalQuestions}",
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -142,7 +192,7 @@ class QuizScorePage extends StatelessWidget {
               _buildScoreTile(
                 Icons.timer_outlined,
                 "Time",
-                _formatTime(timeSpent),
+                _formatTime(widget.timeSpent),
               ),
               _buildScoreTile(
                 Icons.emoji_events_outlined,
@@ -152,7 +202,7 @@ class QuizScorePage extends StatelessWidget {
               _buildScoreTile(
                 Icons.verified_outlined,
                 "Correct Answers",
-                "$score out of $totalQuestions",
+                "${widget.score} out of ${widget.totalQuestions}",
               ),
 
               const Spacer(),
@@ -175,8 +225,8 @@ class QuizScorePage extends StatelessWidget {
                     MaterialPageRoute(
                       builder:
                           (context) => QuizQuestionPage(
-                            quizType: quizType,
-                            quizNumber: quizNumber,
+                            quizType: widget.quizType,
+                            quizNumber: widget.quizNumber,
                           ),
                     ),
                   );

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "709252487720",
+    "project_id": "msl-elearning",
+    "storage_bucket": "msl-elearning.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709252487720:android:1e61756062ef9127a0331d",
+        "android_client_info": {
+          "package_name": "com.example.msl_elearning"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTx6FnNt-qFAPhVJgb5AjxzqASgqC6wWM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
