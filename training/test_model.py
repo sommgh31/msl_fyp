@@ -6,9 +6,9 @@ from torchvision import transforms
 # Load model
 device = torch.device("cpu")
 model = resnet18(weights=None)
-model.fc = torch.nn.Linear(model.fc.in_features, 50)
+model.fc = torch.nn.Linear(model.fc.in_features, 51)  # Updated to 51 classes
 
-state_dict = torch.load("msl_full_dataset_50_classes.pth", map_location=device)
+state_dict = torch.load("msl_51_classes.pth", map_location=device)
 model.load_state_dict(state_dict)
 model.eval()
 
@@ -22,13 +22,16 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.29, 0.29, 0.29])
 ])
 
+# Updated CLASSES list with 51 classes (includes "Sayang Awak")
 CLASSES = [
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'Air', 'Awak', 'Demam', 'Dengar', 'Maaf', 'Makan', 'Masa', 'Minum',
-    'Salah', 'Saya', 'Sayang Awak', 'Senyap', 'Tidur', 'Tolong'
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+    'Air', 'Awak', 'Demam', 'Dengar', 'Maaf', 'Makan', 'Minum',
+    'Salah', 'Saya', 'Sayang Awak', 'Senyap', 'Tidur', 'Tolong', 'Waktu'
 ]
+
+print(f"Total classes: {len(CLASSES)}")
 
 # Test with a sample image
 img_path = r"C:\Users\acer\pytorchtest\dataset\A\img1.jpg"  # Update this
@@ -40,11 +43,13 @@ with torch.no_grad():
     probs = torch.softmax(output, dim=1)
     conf, pred = torch.max(probs, 1)
     
-    print(f"\nPrediction: {CLASSES[pred.item()]}")
+    pred_idx = int(pred.item())
+    print(f"\nPrediction: {CLASSES[pred_idx]}")
     print(f"Confidence: {conf.item()*100:.2f}%")
     
     # Top 3
     top3_prob, top3_idx = torch.topk(probs, 3)
     print("\nTop 3:")
     for prob, idx in zip(top3_prob[0], top3_idx[0]):
-        print(f"  {CLASSES[idx.item()]}: {prob.item()*100:.2f}%")
+        idx_val = int(idx.item())
+        print(f"  {CLASSES[idx_val]}: {prob.item()*100:.2f}%")

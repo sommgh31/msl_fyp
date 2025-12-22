@@ -26,16 +26,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# MSL Classes (50 signs) - Exact match to your dataset
+# MSL Classes (51 signs) - Updated to include "Sayang Awak"
 CLASSES = [
     # 26 Letters (A-Z)
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     # 11 Numbers (0-10)
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
-    # 13 Words
+    # 14 Words (alphabetically sorted)
     'Air', 'Awak', 'Demam', 'Dengar', 'Maaf', 'Makan', 'Minum', 
-    'Salah', 'Saya', 'Senyap', 'Tidur', 'Tolong', 'Waktu'
+    'Salah', 'Saya', 'Sayang Awak', 'Senyap', 'Tidur', 'Tolong', 'Waktu'
 ]
 
 print(f"Total classes: {len(CLASSES)}")

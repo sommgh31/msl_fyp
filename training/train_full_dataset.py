@@ -1,6 +1,6 @@
 # ===============================
-# MSL Full Dataset Training (50 Classes)
-# A-Z (26), 0-10 (11), Words (13)
+# MSL Full Dataset Training (51 Classes)
+# A-Z (26), 0-10 (11), Words (14)
 # ===============================
 import os
 import cv2
@@ -13,7 +13,11 @@ from torchvision.models import resnet18, ResNet18_Weights
 from sklearn.model_selection import StratifiedShuffleSplit
 from PIL import Image
 import numpy as np
-import mediapipe as mp
+try:
+    import mediapipe as mp
+    mp_hands = mp.solutions.hands  # type: ignore
+except AttributeError:
+    from mediapipe.python.solutions import hands as mp_hands  # type: ignore
 from tqdm import tqdm
 
 # ======================================
@@ -33,16 +37,16 @@ os.makedirs(MODELS_OUTPUT_PATH, exist_ok=True)
 print(f"Dataset path: {DATASET_PATH}")
 print(f"Models output: {MODELS_OUTPUT_PATH}")
 
-# All 50 classes - EXACT MATCH TO YOUR DATASET
+# All 51 classes - UPDATED TO INCLUDE "Sayang Awak"
 ALLOWED_CLASSES = [
     # 26 Letters (A-Z)
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     # 11 Numbers (0-10)
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
-    # 13 Words (alphabetically sorted)
+    # 14 Words (alphabetically sorted, including "Sayang Awak")
     'Air', 'Awak', 'Demam', 'Dengar', 'Maaf', 'Makan', 'Minum',
-    'Salah', 'Saya', 'Senyap', 'Tidur', 'Tolong', 'Waktu'
+    'Salah', 'Saya', 'Sayang Awak', 'Senyap', 'Tidur', 'Tolong', 'Waktu'
 ]
 
 NUM_CLASSES = len(ALLOWED_CLASSES)
@@ -55,7 +59,7 @@ print(f"Training Configuration:")
 print(f"  Total Classes: {NUM_CLASSES}")
 print(f"  - Letters: 26 (A-Z)")
 print(f"  - Numbers: 11 (0-10)")
-print(f"  - Words: 13")
+print(f"  - Words: 14 (includes 'Sayang Awak')")
 print(f"  Batch Size: {BATCH_SIZE}")
 print(f"  Epochs: {NUM_EPOCHS}")
 print(f"  Learning Rate: {LEARNING_RATE}")
@@ -64,8 +68,7 @@ print(f"{'='*60}\n")
 # ======================================
 # MEDIAPIPE SETUP
 # ======================================
-mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(
+hands = mp_hands.Hands(  # type: ignore
     static_image_mode=True,
     max_num_hands=1,
     min_detection_confidence=0.5
@@ -99,9 +102,9 @@ class MSLDataset(Dataset):
                     count += 1
             
             if count > 0:
-                print(f"  ✅ {cls_name:12s}: {count:4d} images")
+                print(f"  ✅ {cls_name:15s}: {count:4d} images")
             else:
-                print(f"  ⚠️  {cls_name:12s}: NO IMAGES FOUND")
+                print(f"  ⚠️  {cls_name:15s}: NO IMAGES FOUND")
 
         print(f"\n📊 Total images loaded: {len(self.targets)}")
 
@@ -109,11 +112,11 @@ class MSLDataset(Dataset):
         """Crop hand using MediaPipe"""
         try:
             img_rgb = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-            result = hands.process(img_rgb)
+            result = hands.process(img_rgb)  # type: ignore
             
-            if result.multi_hand_landmarks:
+            if result.multi_hand_landmarks:  # type: ignore
                 h, w, _ = img_rgb.shape
-                landmarks = result.multi_hand_landmarks[0].landmark
+                landmarks = result.multi_hand_landmarks[0].landmark  # type: ignore
                 
                 x_min = int(min([lm.x for lm in landmarks]) * w) - 20
                 y_min = int(min([lm.y for lm in landmarks]) * h) - 20
@@ -179,6 +182,7 @@ if len(dataset) == 0:
     print(f"    ├── 10/")
     print(f"    ├── Air/")
     print(f"    ├── Awak/")
+    print(f"    ├── Sayang Awak/  ← NEW!")
     print(f"    └── ...")
     exit()
 
@@ -338,14 +342,14 @@ print(f"\n🎉 Training Complete!")
 print(f"  Best Test Accuracy: {best_acc:.2f}%")
 
 # Save in models folder
-model_pth_path = os.path.join(MODELS_OUTPUT_PATH, "msl_50_classes.pth")
+model_pth_path = os.path.join(MODELS_OUTPUT_PATH, "msl_51_classes.pth")
 torch.save(model.state_dict(), model_pth_path)
 print(f"\n✅ Saved: {model_pth_path}")
 
 # Save SafeTensors
 try:
     from safetensors.torch import save_file
-    model_st_path = os.path.join(MODELS_OUTPUT_PATH, "msl_50_classes.safetensors")
+    model_st_path = os.path.join(MODELS_OUTPUT_PATH, "msl_51_classes.safetensors")
     save_file(model.state_dict(), model_st_path)
     print(f"✅ Saved: {model_st_path}")
 except ImportError:
@@ -364,17 +368,3 @@ except Exception as e:
 
 hands.close()
 
-print("\n" + "="*60)
-print("🎉 ALL DONE!")
-print("="*60)
-print("\nYour 50-class MSL model is ready!")
-print("\nClasses trained:")
-print("  • Letters: A-Z (26 classes)")
-print("  • Numbers: 0-10 (11 classes)")
-print("  • Words: Air, Awak, Demam, Dengar, Maaf, Makan, Minum,")
-print("          Salah, Saya, Senyap, Tidur, Tolong, Waktu (13 classes)")
-print("\nNext steps:")
-print("  1. cd backend")
-print("  2. uvicorn main:app --reload --host 0.0.0.0 --port 8000")
-print("  3. cd ../msl_app")
-print("  4. flutter run")
